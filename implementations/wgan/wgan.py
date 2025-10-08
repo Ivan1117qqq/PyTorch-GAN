@@ -15,10 +15,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+generator_path = "saved_model/generator.pth"
+discriminator_path = "saved_model/discriminator.pth"
+
+os.makedirs("saved_model", exist_ok=True)
+
 os.makedirs("images", exist_ok=True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.00005, help="learning rate")
 parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
@@ -87,6 +92,13 @@ discriminator = Discriminator()
 if cuda:
     generator.cuda()
     discriminator.cuda()
+
+if os.path.exists(generator_path) and os.path.exists(discriminator_path):
+    print("Loading pre-trained models...")
+    generator.load_state_dict(torch.load(generator_path))
+    discriminator.load_state_dict(torch.load(discriminator_path))
+else:
+    print("pre-trained models not exists...")
 
 # Configure data loader
 os.makedirs("../../data/mnist", exist_ok=True)
@@ -165,3 +177,8 @@ for epoch in range(opt.n_epochs):
         if batches_done % opt.sample_interval == 0:
             save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
         batches_done += 1
+
+# final model saved
+torch.save(generator.state_dict(), generator_path)
+torch.save(discriminator.state_dict(), discriminator_path)
+print("Final models saved to saved_model/")
