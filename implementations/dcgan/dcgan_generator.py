@@ -6,6 +6,8 @@ from torchvision.utils import save_image
 
 import torch.nn as nn
 
+from PIL import Image
+
 # 定義 Generator 跟訓練時相同
 class Generator(nn.Module):
     def __init__(self,img_size,latent_dim,channels):
@@ -37,7 +39,7 @@ class Generator(nn.Module):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_images", type=int, default=25, help="要產生多少張圖片")
+    parser.add_argument("--n_images", type=int, default=100, help="要產生多少張圖片")
     parser.add_argument("--latent_dim", type=int, default=100, help="潛在向量維度")
     parser.add_argument("--img_size", type=int, default=32, help="圖片尺寸")
     parser.add_argument("--channels", type=int, default=1, help="圖片通道數")
@@ -50,7 +52,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 建立 generator 並載入權重
-    generator = Generator(img_size = opt.img_size,latent_dim = opt.latent_dim, channels = opt.channels).to(device)
+    generator = Generator(img_size = opt.img_size ,latent_dim = opt.latent_dim, channels = opt.channels).to(device)
     generator.load_state_dict(torch.load(opt.model_path, map_location=device))
     generator.eval()
 
@@ -64,6 +66,11 @@ def main():
     # 存圖片，每張圖片一個檔案
     for i in range(opt.n_images):
         save_image(gen_imgs[i], os.path.join(opt.output_dir, f"img_{i+1}.png"), normalize=True)
+
+        path = os.path.join(opt.output_dir, f"img_{i+1}.png")
+
+        img = Image.open(path).convert("L")
+        img.save(path)  # 覆蓋儲存
 
     print(f"✅ 成功產生 {opt.n_images} 張圖片，存放在 {opt.output_dir}/")
 

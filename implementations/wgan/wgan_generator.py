@@ -6,6 +6,8 @@ import os
 
 import argparse
 
+from PIL import Image
+
 # 同樣的Generator架構定義 (要跟訓練時一樣)
 class Generator(nn.Module):
     def __init__(self,latent_dim,img_shape):
@@ -35,7 +37,7 @@ class Generator(nn.Module):
 
 def generate_images():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_images", type=int, default=25, help="要產生多少張圖片")
+    parser.add_argument("--n_images", type=int, default=100, help="要產生多少張圖片")
     parser.add_argument("--latent_dim", type=int, default=100, help="潛在向量維度")
     parser.add_argument("--img_size", type=int, default=32, help="圖片尺寸")
     parser.add_argument("--channels", type=int, default=1, help="圖片通道數")
@@ -63,7 +65,14 @@ def generate_images():
     for i in range(opt.n_images):
         save_image(gen_imgs[i], f"generated_images/img_{i+1}.png", normalize=True)
 
+        path = os.path.join(opt.output_dir, f"img_{i+1}.png")
+        # 讀回並強制轉為灰階再儲存（確保通道為 1）
+        img = Image.open(path).convert("L")
+        img.save(path)  # 覆蓋原圖（也可改名保留原始圖）
+
     print(f"{opt.n_images}張圖片已生成並儲存在 generated_images 資料夾")
+
+
 
 if __name__ == "__main__":
     generate_images()
